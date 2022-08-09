@@ -1,0 +1,8 @@
+.wenv
+.psenv
+.env
+.docker-compose.yml.bk*
+services/web/app/__pycache__/
+services/web/app/cached/
+services/web/app/logs/
+services/airflow/logs/

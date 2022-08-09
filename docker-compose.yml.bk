@@ -1,0 +1,71 @@
+version: '3.6'
+
+services:
+  web:
+    build: ./services/web
+    command: gunicorn --bind 0.0.0.0:5000 manage:app
+    volumes:
+      - ./services/web/:/usr/src/app/
+    expose:
+     - 5000
+    env_file:
+      - ./.env.dev
+  nginx:
+    build: ./services/nginx
+    volumes:
+      - static_volume:/home/app/web/project/static
+      - media_volume:/home/app/web/project/media
+    ports:
+      - 1337:80
+    depends_on:
+      - web
+  db:
+    image: postgres:13-alpine
+    container_name: db
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - ./.psenv
+  cleaner:
+    build: ./services/cleaner
+    volumes:
+      - ./services/web/cached_ing:/usr/src/data/
+  grafana:
+    build:
+      context: ""
+      dockerfile: ./services/grafana/Dockerfile
+    container_name: grafana2
+    links:
+      - db
+    ports:
+      - 3000:3000
+    volumes:
+      - ./grafana-data:/var/lib/grafana
+    env_file:
+      - ./.gfenv
+    user: '0'
+  jupyter:
+    build:
+      context: ""
+      dockerfile: ./services/jup/Dockerfile
+    restart: 'no'
+    volumes:
+      - ./notebooks:/home/jovyan/notebooks
+    ports:
+      - "8888:8888"
+    environment:
+      NB_UID: ${UID}
+      NB_GID: ${GID}
+
+
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:
+  grafana_data:
+    name: grafana-data
+    external: false
+
